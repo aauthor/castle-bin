@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# system specific
+stylus="Serial Wacom Tablet WACf004 stylus"
+eraser="Serial Wacom Tablet WACf004 eraser"
+
+#Gets the current mode of the screen
+mode="$(xrandr -q --verbose | grep 'connected' | egrep -o '\) (normal|left|inverted|right) \(' | egrep -o '(normal|left|inverted|right)')"
+
+# translation of xrandr into wacom orientation
+case "$1" in
+  normal)
+  xrandr_orientation=normal
+  wacom_orientation=none
+  ;;
+  left)
+  xrandr_orientation=left
+  wacom_orientation=ccw
+  ;;
+  right)
+  xrandr_orientation=right
+  wacom_orientation=cw
+  ;;
+  inverted)
+  xrandr_orientation=inverted
+  wacom_orientation=half
+  ;;
+  toggle)
+  xrandr_orientation=$([ "$mode" == inverted ] && echo "right" || echo "inverted")
+  wacom_orientation=$([ "$mode" == inverted ] && echo "cw" || echo "half")
+  ;;
+  *)
+  echo "Usage: $0 {normal|left|right|inverted|toggle}"
+  exit 1
+  ;;
+esac
+  
+
+xrandr -o $xrandr_orientation
+xsetwacom --set "$stylus" Rotate $wacom_orientation
+xsetwacom --set "$eraser" Rotate $wacom_orientation
